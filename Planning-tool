@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="nl" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zuurdesem Planner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300..700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { -webkit-font-smoothing: antialiased; scroll-behavior: smooth; }
+:root, [data-theme="light"] {
+  --color-bg:#f7f6f2; --color-surface:#f9f8f5; --color-surface-2:#fbfbf9;
+  --color-surface-offset:#f0ece5; --color-surface-dynamic:#e6e4df;
+  --color-border:#d4d1ca; --color-divider:#dcd9d5;
+  --color-text:#28251d; --color-text-muted:#7a7974; --color-text-faint:#bab9b4;
+  --color-primary:#01696f; --color-primary-hover:#0c4e54; --color-primary-highlight:#cedcd8;
+  --color-warning:#964219; --color-warning-highlight:#ffe8d5;
+  --color-error:#a12c3a; --color-error-highlight:#fde8ea;
+  --color-success:#437a22; --color-success-highlight:#d4f0c4;
+  --color-sleep:#7a39bb; --color-sleep-highlight:#e8dff7;
+  --radius-sm:0.375rem; --radius-md:0.5rem; --radius-lg:0.75rem; --radius-xl:1rem; --radius-full:9999px;
+  --shadow-sm:0 1px 2px oklch(0.2 0.01 80/.06); --shadow-md:0 4px 12px oklch(0.2 0.01 80/.08);
+  --space-1:.25rem;--space-2:.5rem;--space-3:.75rem;--space-4:1rem;
+  --space-5:1.25rem;--space-6:1.5rem;--space-8:2rem;--space-10:2.5rem;
+  --text-xs:clamp(0.72rem,.68rem + .2vw,.82rem);
+  --text-sm:clamp(0.85rem,.8rem + .3vw,.95rem);
+  --text-base:clamp(1rem,.95rem + .25vw,1.1rem);
+  --text-lg:clamp(1.1rem,1rem + .6vw,1.4rem);
+  --text-xl:clamp(1.4rem,1.1rem + 1.2vw,2rem);
+  --font-display:'Instrument Serif',Georgia,serif;
+  --font-body:'DM Sans',system-ui,sans-serif;
+  --tr:180ms cubic-bezier(.16,1,.3,1);
+}
+[data-theme="dark"] {
+  --color-bg:#171614; --color-surface:#1c1b19; --color-surface-2:#201f1d;
+  --color-surface-offset:#242220; --color-surface-dynamic:#2d2c2a;
+  --color-border:#393836; --color-divider:#262523;
+  --color-text:#cdccca; --color-text-muted:#797876; --color-text-faint:#5a5957;
+  --color-primary:#4f98a3; --color-primary-hover:#227f8b; --color-primary-highlight:#1f3234;
+  --color-warning:#bb653b; --color-warning-highlight:#3a2e24;
+  --color-error:#dd6974; --color-error-highlight:#3d2428;
+  --color-success:#6daa45; --color-success-highlight:#2a3a20;
+  --color-sleep:#a86fdf; --color-sleep-highlight:#2e2540;
+  --shadow-sm:0 1px 2px oklch(0 0 0/.3); --shadow-md:0 4px 12px oklch(0 0 0/.4);
+}
+body{font-family:var(--font-body);font-size:var(--text-base);color:var(--color-text);background:var(--color-bg);min-height:100dvh;line-height:1.6;}
+button{cursor:pointer;background:none;border:none;font:inherit;color:inherit;transition:all var(--tr);}
+input,select{font:inherit;color:inherit;}
+h1,h2,h3{text-wrap:balance;line-height:1.2;}
+
+/* APP SHELL */
+.app{display:grid;grid-template-rows:auto 1fr;min-height:100dvh;}
+header{background:var(--color-surface);border-bottom:1px solid var(--color-border);padding:var(--space-3) var(--space-6);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:var(--shadow-sm);}
+.logo{display:flex;align-items:center;gap:var(--space-3);}
+.logo svg{color:var(--color-primary);}
+.logo-text{font-family:var(--font-display);font-size:var(--text-lg);}
+.logo-text span{color:var(--color-primary);font-style:italic;}
+.main{display:grid;grid-template-columns:360px 1fr;height:calc(100dvh - 57px);overflow:hidden;}
+@media(max-width:900px){.main{grid-template-columns:1fr;height:auto;overflow:visible;}}
+
+/* SIDEBAR */
+.sidebar{background:var(--color-surface);border-right:1px solid var(--color-border);overflow-y:auto;padding:var(--space-5);display:flex;flex-direction:column;gap:var(--space-5);}
+.section-block{display:flex;flex-direction:column;gap:var(--space-3);}
+.section-label{font-size:var(--text-xs);font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--color-text-muted);}
+
+/* FORM ELEMENTS */
+.field{display:flex;flex-direction:column;gap:var(--space-1);}
+.field label{font-size:var(--text-sm);color:var(--color-text-muted);}
+.field input[type="datetime-local"],.field select,.field input[type="time"]{
+  width:100%;padding:var(--space-2) var(--space-3);border:1px solid var(--color-border);
+  border-radius:var(--radius-md);background:var(--color-surface-2);font-size:var(--text-sm);
+  transition:border-color var(--tr),outline-color var(--tr);}
+.field input:focus,.field select:focus{outline:2px solid var(--color-primary);outline-offset:2px;border-color:transparent;}
+.row-2{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-2);}
+
+/* BUTTONS */
+.btn{padding:var(--space-2) var(--space-4);border-radius:var(--radius-md);font-size:var(--text-sm);font-weight:500;display:inline-flex;align-items:center;gap:var(--space-2);}
+.btn-primary{background:var(--color-primary);color:#fff;}
+.btn-primary:hover{background:var(--color-primary-hover);}
+.btn-ghost{background:transparent;border:1px solid var(--color-border);color:var(--color-text-muted);}
+.btn-ghost:hover{background:var(--color-surface-offset);color:var(--color-text);}
+.btn-sm{padding:var(--space-1) var(--space-3);font-size:var(--text-xs);}
+.btn-full{width:100%;justify-content:center;}
+.btn-sleep{background:var(--color-sleep-highlight);color:var(--color-sleep);border:1px solid var(--color-sleep);}
+.btn-sleep:hover{background:var(--color-sleep);color:#fff;}
+
+/* BUSY PERIODS LIST */
+.periods-list{display:flex;flex-direction:column;gap:var(--space-2);}
+.period-chip{display:flex;align-items:center;justify-content:space-between;background:var(--color-surface-2);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:var(--space-2) var(--space-3);font-size:var(--text-xs);}
+.period-chip.type-busy{border-left:3px solid var(--color-error);}
+.period-chip.type-sleep{border-left:3px solid var(--color-sleep);}
+.period-chip-label{font-weight:600;color:var(--color-text);}
+.period-chip-time{color:var(--color-text-muted);}
+.period-remove{width:22px;height:22px;border-radius:var(--radius-full);display:flex;align-items:center;justify-content:center;color:var(--color-text-faint);background:var(--color-surface-dynamic);flex-shrink:0;}
+.period-remove:hover{background:var(--color-error-highlight);color:var(--color-error);}
+.empty-periods{font-size:var(--text-xs);color:var(--color-text-faint);text-align:center;padding:var(--space-3);border:1px dashed var(--color-border);border-radius:var(--radius-md);}
+
+/* MAIN CONTENT */
+.content{overflow-y:auto;padding:var(--space-6);display:flex;flex-direction:column;gap:var(--space-5);}
+.card{background:var(--color-surface);border-radius:var(--radius-xl);border:1px solid var(--color-border);padding:var(--space-6);box-shadow:var(--shadow-sm);}
+.card h2{font-family:var(--font-display);font-size:var(--text-lg);margin-bottom:var(--space-4);}
+
+/* STATUS */
+.status-header{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--space-4);margin-bottom:var(--space-3);}
+.status-title{font-family:var(--font-display);font-size:var(--text-xl);}
+.badge{padding:var(--space-1) var(--space-3);border-radius:var(--radius-full);font-size:var(--text-xs);font-weight:700;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;}
+.badge-ok{background:var(--color-success-highlight);color:var(--color-success);}
+.badge-err{background:var(--color-error-highlight);color:var(--color-error);}
+.badge-warn{background:var(--color-warning-highlight);color:var(--color-warning);}
+.badge-neutral{background:var(--color-surface-offset);color:var(--color-text-muted);}
+.status-desc{font-size:var(--text-sm);color:var(--color-text-muted);}
+.status-desc strong{color:var(--color-text);}
+
+/* STEP LIST */
+.step-list{display:flex;flex-direction:column;}
+.step-item{display:grid;grid-template-columns:38px 1fr;gap:var(--space-4);position:relative;padding-bottom:var(--space-4);}
+.step-item:not(:last-child)::before{content:'';position:absolute;left:18px;top:38px;bottom:0;width:2px;background:var(--color-border);}
+.step-num{width:38px;height:38px;border-radius:var(--radius-full);display:flex;align-items:center;justify-content:center;font-size:var(--text-xs);font-weight:700;flex-shrink:0;z-index:1;border:2px solid var(--color-border);background:var(--color-bg);}
+.s-done{background:var(--color-success-highlight)!important;border-color:var(--color-success)!important;color:var(--color-success)!important;}
+.s-active{background:var(--color-primary)!important;border-color:var(--color-primary)!important;color:#fff!important;}
+.s-conflict{background:var(--color-error-highlight)!important;border-color:var(--color-error)!important;color:var(--color-error)!important;}
+.s-future{background:var(--color-surface-offset)!important;border-color:var(--color-divider)!important;color:var(--color-text-muted)!important;}
+.step-body{padding-top:var(--space-2);}
+.step-name{font-weight:600;font-size:var(--text-sm);}
+.step-time{font-size:var(--text-xs);color:var(--color-text-muted);margin-top:1px;}
+.step-time strong{color:var(--color-primary);}
+.step-note{font-size:var(--text-xs);color:var(--color-text-faint);margin-top:2px;max-width:52ch;}
+.step-conflict-msg{font-size:var(--text-xs);color:var(--color-error);font-weight:600;margin-top:var(--space-1);}
+.step-flex-note{font-size:var(--text-xs);color:var(--color-primary);margin-top:2px;}
+
+/* VISUAL TIMELINE BAR */
+.tl-bar-wrap{overflow-x:auto;padding-bottom:var(--space-2);}
+.tl-bar{position:relative;height:56px;min-width:700px;border-radius:var(--radius-md);background:var(--color-surface-offset);}
+.tl-seg{position:absolute;top:6px;height:44px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:11px;overflow:hidden;padding:0 3px;transition:filter var(--tr);}
+.tl-seg:hover{filter:brightness(1.12);}
+.tl-seg-busy{background:oklch(from var(--color-error) l c h/.3);}
+.tl-seg-sleep{background:oklch(from var(--color-sleep) l c h/.35);}
+.tl-axis{display:flex;min-width:700px;margin-top:3px;position:relative;height:16px;}
+.tl-axis-lbl{font-size:8px;color:var(--color-text-faint);}
+.tip{font-size:var(--text-xs);color:var(--color-text-faint);text-align:center;padding-top:var(--space-2);}
+
+/* THEME TOGGLE */
+.theme-btn{width:34px;height:34px;border-radius:var(--radius-full);display:flex;align-items:center;justify-content:center;color:var(--color-text-muted);background:var(--color-surface-offset);}
+.theme-btn:hover{background:var(--color-surface-dynamic);}
+
+/* DIVIDER */
+hr{border:none;border-top:1px solid var(--color-divider);margin:var(--space-1) 0;}
+
+.sf-substeps{display:flex;flex-direction:column;gap:2px;margin-top:var(--space-2);margin-bottom:var(--space-1);padding:var(--space-2) var(--space-3);background:var(--color-surface-offset);border-radius:var(--radius-md);border-left:3px solid #da7101;}
+.sf-sub{display:flex;justify-content:space-between;align-items:center;font-size:var(--text-xs);}
+.sf-active{color:var(--color-text);font-weight:600;}
+.sf-rest{color:var(--color-text-muted);}
+.sf-label{flex:1;}
+.sf-time{color:var(--color-primary);font-variant-numeric:tabular-nums;}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+  <div class="logo">
+    <svg width="26" height="26" viewBox="0 0 28 28" fill="none" aria-label="Logo">
+      <ellipse cx="14" cy="16" rx="11" ry="9" fill="none" stroke="currentColor" stroke-width="2"/>
+      <path d="M6 16 Q9 10 14 8 Q19 10 22 16" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      <circle cx="14" cy="8" r="2.5" fill="currentColor" opacity="0.35"/>
+      <path d="M10 14 Q12 12 14 14 Q16 12 18 14" stroke="currentColor" stroke-width="1" fill="none" stroke-linecap="round"/>
+    </svg>
+    <span class="logo-text">Zuurdesem <span>Planner</span></span>
+  </div>
+  <button class="theme-btn" data-theme-toggle aria-label="Schakel thema">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+  </button>
+</header>
+
+<div class="main">
+<aside class="sidebar">
+  <div class="section-block">
+    <div class="section-label">Uiterlijk klaar op</div>
+    <div class="field">
+      <label for="deadline">Brood moet uiterlijk klaar zijn:</label>
+      <input type="datetime-local" id="deadline" step="1800"/>
+    </div>
+  </div>
+
+  <hr/>
+
+  <div class="section-block">
+    <div class="section-label">Drukke periode toevoegen</div>
+    <div class="row-2">
+      <div class="field"><label>Van</label><input type="datetime-local" id="busyFrom" step="1800"/></div>
+      <div class="field"><label>Tot</label><input type="datetime-local" id="busyTo" step="1800"/></div>
+    </div>
+    <button class="btn btn-ghost btn-sm" id="addBusyBtn">Bezet periode toevoegen</button>
+  </div>
+
+  <div class="section-block">
+    <div class="section-label">Slaaptijd toevoegen</div>
+    <div class="row-2">
+      <div class="field"><label>Van</label><input type="datetime-local" id="sleepFrom" step="1800"/></div>
+      <div class="field"><label>Tot</label><input type="datetime-local" id="sleepTo" step="1800"/></div>
+    </div>
+    <button class="btn btn-sleep btn-sm" id="addSleepBtn">Slaaptijd toevoegen</button>
+  </div>
+
+  <div class="section-block">
+    <div class="section-label">Jouw geplande periodes</div>
+    <div class="periods-list" id="periodsList">
+      <div class="empty-periods">Nog geen periodes toegevoegd</div>
+    </div>
+  </div>
+
+  <hr/>
+
+  <div class="section-block">
+    <button class="btn btn-primary btn-full" id="calcBtn">Zoek beste planning</button>
+    <button class="btn btn-ghost btn-full" id="resetBtn">Reset alles</button>
+  </div>
+</aside>
+
+<main class="content">
+  <div class="card" id="statusCard">
+    <div class="status-header">
+      <h1 class="status-title">Plan je zuurdesembrood</h1>
+      <span class="badge badge-neutral">Wachten op invoer</span>
+    </div>
+    <p class="status-desc">Stel een deadline in, voeg drukke periodes en slaaptijden toe. De planner zoekt automatisch de beste starttijd binnen alle tijdsvensters.</p>
+  </div>
+
+  <div class="card" id="timelineCard" style="display:none">
+    <h2>Visuele tijdlijn</h2>
+    <div class="tl-bar-wrap"><div class="tl-bar" id="tlBar"></div><div class="tl-axis" id="tlAxis"></div></div>
+    <p class="tip">Scroll horizontaal · Hover over segmenten voor details</p>
+  </div>
+
+  <div class="card" id="stepsCard" style="display:none">
+    <h2>Stap-voor-stap schema</h2>
+    <div class="step-list" id="stepList"></div>
+  </div>
+</main>
+</div>
+</div>
+
+<script>
+(function(){
+  const t=document.querySelector('[data-theme-toggle]'),r=document.documentElement;
+  let d=matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';
+  r.setAttribute('data-theme',d);
+  const sun='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>';
+  const moon='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+  if(t){t.innerHTML=d==='dark'?sun:moon;t.addEventListener('click',()=>{d=d==='dark'?'light':'dark';r.setAttribute('data-theme',d);t.innerHTML=d==='dark'?sun:moon;});}
+})();
+
+let periods = [];
+let schedule = null;
+
+const STEPS = [
+  {id:0,name:"Starter uit koelkast",emoji:"🧊",minDur:60,maxDur:720,perfectDur:360,note:"Min 1u, perfect 6u, max 12u buiten de koelkast. Stap 2 (mengen) moet binnen dit venster starten.",color:"#01696f",activeRequired:false,isPassive:true},
+  {id:1,name:"Ingrediënten mengen",emoji:"🥣",minDur:10,maxDur:10,perfectDur:10,note:"Starter, bloem, water en zout mengen. ~10 min. Direct daarna begint de autolyse.",color:"#437a22",activeRequired:true},
+  {id:2,name:"Autolyse – deeg rust",emoji:"⏳",minDur:30,maxDur:45,perfectDur:30,note:"Deeg reizen direct na het mengen. Min 30 min, max 45 min. Daarna moet direct de S&F reeks starten.",color:"#c4870a",isPassive:true},
+  {id:3,name:"4× Stretch & Fold",emoji:"🤲",minDur:110,maxDur:110,perfectDur:110,note:"4 rondes aaneengesloten. Mag NIET worden onderbroken door slaap of bezette periodes.",color:"#da7101",activeRequired:true,sfBlock:true},
+  {id:10,name:"Bulk fermentatie",emoji:"🍞",minDur:330,maxDur:360,perfectDur:360,note:"6u buiten koelkast. Precies 6u perfect, min 5,5u.",color:"#006494",isPassive:true},
+  {id:11,name:"Rijzen in koelkast",emoji:"❄️",minDur:60,maxDur:1440,perfectDur:480,note:"Min 1u, max 24u in de koelkast. Flexibel – kan 's nachts! Daarna direct oven voorverwarmen.",color:"#7a39bb",isPassive:true,inFridge:true},
+  {id:12,name:"Oven voorverwarmen",emoji:"🔥",minDur:15,maxDur:15,perfectDur:15,note:"Oven + pan op 250°C, ~15 min.",color:"#964219",activeRequired:true},
+  {id:13,name:"Brood vormen",emoji:"👐",minDur:15,maxDur:15,perfectDur:15,note:"Deeg vormen en in de pan leggen, ~15 min.",color:"#964219",activeRequired:true},
+  {id:14,name:"Bakken met deksel",emoji:"🫙",minDur:30,maxDur:30,perfectDur:30,note:"30 min op 250°C met deksel.",color:"#964219",isPassive:true},
+  {id:15,name:"Bakken zonder deksel",emoji:"🌡️",minDur:30,maxDur:30,perfectDur:30,note:"Deksel eraf, 30 min voor gouden korst.",color:"#964219",isPassive:true},
+  {id:16,name:"Rusten na bakken",emoji:"🧺",minDur:30,maxDur:30,perfectDur:30,note:"Uit pan, 30 min rusten op rooster.",color:"#a12c7b",isPassive:true},
+  {id:17,name:"Brood klaar! 🎉",emoji:"🍞",minDur:0,maxDur:0,perfectDur:0,note:"Het brood is klaar om te eten of in te vriezen!",color:"#437a22"}
+];
+
+const addMin=(d,m)=>new Date(d.getTime()+m*60000);
+const fmtTime=d=>d.toLocaleTimeString('nl-NL',{hour:'2-digit',minute:'2-digit'});
+const fmtDT=d=>d.toLocaleString('nl-NL',{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+const fmtDTLocal=d=>{
+  const pad=n=>String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+};
+
+function isBusyAt(start,end,includeTypes=['busy','sleep']){
+  for(const p of periods){
+    if(!includeTypes.includes(p.type)) continue;
+    if(start < p.to && end > p.from) return true;
+  }
+  return false;
+}
+
+function addPeriod(type,from,to){
+  if(from>=to){alert('Eindtijd moet na starttijd zijn.');return;}
+  periods.push({type,from,to});
+  periods.sort((a,b)=>a.from-b.from);
+  renderPeriods();
+}
+
+function renderPeriods(){
+  const el=document.getElementById('periodsList');
+  if(periods.length===0){
+    el.innerHTML='<div class="empty-periods">Nog geen periodes toegevoegd</div>';
+    return;
+  }
+  el.innerHTML='';
+  periods.forEach((p,i)=>{
+    const chip=document.createElement('div');
+    chip.className=`period-chip type-${p.type}`;
+    const icon=p.type==='sleep'?'🌙':'⛔';
+    const label=p.type==='sleep'?'Slaap':'Bezet';
+    chip.innerHTML=`
+      <div>
+        <div class="period-chip-label">${icon} ${label}</div>
+        <div class="period-chip-time">${fmtDT(p.from)} → ${fmtDT(p.to)}</div>
+      </div>
+      <button class="period-remove" data-idx="${i}" title="Verwijder">✕</button>`;
+    chip.querySelector('.period-remove').addEventListener('click',()=>{
+      periods.splice(i,1); renderPeriods(); if(schedule) findAndRender();
+    });
+    el.appendChild(chip);
+  });
+}
+
+function simulate(starterStart){
+  const steps=[];
+  let cur=new Date(starterStart);
+  let pendingAutolyseDur=30;
+
+  for(let i=0;i<STEPS.length;i++){
+    const def=STEPS[i];
+    if(def.minDur===0){
+      steps.push({...def,start:new Date(cur),end:new Date(cur),conflict:false,note_extra:''});
+      continue;
+    }
+
+    let start=new Date(cur);
+
+    if(def.id===12){
+      const koelStep=steps.find(s=>s.id===11);
+      const ovenEarliest=addMin(koelStep.start,60);
+      const ovenLatest=addMin(koelStep.start,1440);
+      let ovenCur=new Date(Math.max(ovenEarliest.getTime(),cur.getTime()));
+      const remO=ovenCur.getMinutes()%30;
+      if(remO!==0) ovenCur=addMin(ovenCur,30-remO);
+      let found=false;
+      while(ovenCur<=ovenLatest && !found){
+        if(!isBusyAt(ovenCur,addMin(ovenCur,15),['busy','sleep'])){
+          start=ovenCur;
+          koelStep.end=ovenCur;
+          found=true;
+        }
+        if(!found) ovenCur=addMin(ovenCur,30);
+      }
+      if(!found) return null;
+    }
+
+    if(def.activeRequired && def.id!==12){
+      let attempts=0;
+      while(isBusyAt(start,addMin(start,def.minDur),['busy','sleep']) && attempts<2880){
+        start=addMin(start,30);
+        attempts++;
+      }
+      if(attempts>=2880) return null;
+    }
+
+    if(def.id===0){
+      let attempts=0;
+      while(isBusyAt(start,addMin(start,5),['busy','sleep']) && attempts<2880){
+        start=addMin(start,30);
+        attempts++;
+      }
+    }
+
+    if(def.id===1){
+      const starterStart2=steps[0].start;
+      const mengEarliest=addMin(starterStart2,60);
+      const mengLatest=addMin(starterStart2,720);
+      let mengCur=new Date(Math.max(mengEarliest.getTime(),cur.getTime()));
+      const remM=mengCur.getMinutes()%30;
+      if(remM!==0) mengCur=addMin(mengCur,30-remM);
+      let found=false;
+      while(mengCur<=mengLatest && !found){
+        if(!isBusyAt(mengCur,addMin(mengCur,10),['busy','sleep'])){
+          const autolyseStart=addMin(mengCur,10);
+          for(let autoDur=30;autoDur<=45;autoDur+=5){
+            const sfCandidate=addMin(autolyseStart,autoDur);
+            if(!isBusyAt(sfCandidate,addMin(sfCandidate,110),['busy','sleep'])){
+              pendingAutolyseDur=autoDur;
+              start=mengCur;
+              found=true;
+              break;
+            }
+          }
+        }
+        if(!found) mengCur=addMin(mengCur,30);
+      }
+      if(!found) return null;
+    }
+
+    if(def.id===2){
+      const end2=addMin(start,pendingAutolyseDur);
+      steps.push({...def,start,end:end2,conflict:false,note_extra:'',scheduledDur:pendingAutolyseDur});
+      cur=end2;
+      continue;
+    }
+
+    const dur=def.perfectDur||def.minDur;
+    let end=addMin(start,dur);
+    let conflict=false;
+    if(def.activeRequired && isBusyAt(start,end,['busy','sleep'])) conflict=true;
+    let extra_note='';
+    if(def.inFridge) extra_note=`Kan 's nachts & tijdens drukke periodes (in koelkast).`;
+
+    steps.push({...def,start,end,conflict,note_extra:extra_note});
+    cur=end;
+  }
+  return steps;
+}
+
+function findAndRender(){
+  const deadlineEl=document.getElementById('deadline').value;
+  if(!deadlineEl){alert('Stel eerst een deadline in.');return;}
+  const deadline=new Date(deadlineEl);
+  const now=new Date();
+
+  const startSearch=new Date(now);
+  startSearch.setSeconds(0,0);
+  const rem=startSearch.getMinutes()%30;
+  if(rem!==0) startSearch.setMinutes(startSearch.getMinutes()+(30-rem));
+
+  const minTotal=STEPS.reduce((s,d)=>s+d.minDur,0);
+  const latestStart=new Date(deadline.getTime()-minTotal*60000);
+
+  if(startSearch>latestStart){
+    showStatus('error','Niet genoeg tijd',`Er is onvoldoende tijd beschikbaar voor de deadline. Minimale bakduur is ${Math.round(minTotal/60)} uur.`);
+    return;
+  }
+
+  let bestSchedule=null;
+  let cur=new Date(startSearch);
+  const maxTries=(latestStart-startSearch)/(30*60000)+1;
+
+  for(let t=0;t<=maxTries;t++){
+    const candidate=addMin(cur,t*30);
+    if(candidate>latestStart) break;
+    const sched=simulate(candidate);
+    if(!sched) continue;
+    const done=sched[sched.length-1].end;
+    if(done>deadline) continue;
+    const conflicts=sched.filter(s=>s.conflict);
+    if(conflicts.length===0){bestSchedule=sched;break;}
+    if(!bestSchedule || conflicts.length<bestSchedule.filter(s=>s.conflict).length){bestSchedule=sched;}
+  }
+
+  if(!bestSchedule){
+    showStatus('error','Geen planning gevonden','Het is niet mogelijk een schema te vinden dat past binnen de deadline en jouw vrije periodes. Pas de deadline aan of verwijder enkele bezette periodes.');
+    return;
+  }
+
+  schedule=bestSchedule;
+  renderSchedule(bestSchedule,deadline);
+}
+
+function showStatus(type,title,desc){
+  const badgeClass=type==='error'?'badge-err':type==='ok'?'badge-ok':'badge-warn';
+  const badgeText=type==='error'?'Niet mogelijk':type==='ok'?'Plan gevonden!':'Let op';
+  document.getElementById('statusCard').innerHTML=`
+    <div class="status-header">
+      <h1 class="status-title">${title}</h1>
+      <span class="badge ${badgeClass}">${badgeText}</span>
+    </div>
+    <p class="status-desc">${desc}</p>`;
+}
+
+function renderSFSubsteps(step){
+  const s=step.start;
+  const subs=[
+    {label:'S&F #1', start:s, end:addMin(s,5), act:true},
+    {label:'Rust 1', start:addMin(s,5), end:addMin(s,35), act:false},
+    {label:'S&F #2', start:addMin(s,35), end:addMin(s,40), act:true},
+    {label:'Rust 2', start:addMin(s,40), end:addMin(s,70), act:false},
+    {label:'S&F #3', start:addMin(s,70), end:addMin(s,75), act:true},
+    {label:'Rust 3', start:addMin(s,75), end:addMin(s,105), act:false},
+    {label:'S&F #4', start:addMin(s,105), end:addMin(s,110), act:true},
+  ];
+  return '<div class="sf-substeps">'+subs.map(sub=>`
+    <div class="sf-sub ${sub.act?'sf-active':'sf-rest'}">
+      <span class="sf-label">${sub.act?'🤲':'💤'} ${sub.label}</span>
+      <span class="sf-time">${fmtTime(sub.start)} – ${fmtTime(sub.end)}</span>
+    </div>`).join('')+'</div>';
+}
+
+function renderSchedule(steps,deadline){
+  const conflicts=steps.filter(s=>s.conflict);
+  const done=steps[steps.length-1].end;
+  const starterStep=steps[0];
+  const mengenStep=steps.find(s=>s.id===1);
+  if(mengenStep){
+    starterStep.end=mengenStep.start;
+    const actualH=((mengenStep.start-starterStep.start)/3600000).toFixed(1);
+    starterStep.note_extra='Starter staat '+actualH+'u buiten de koelkast (min 1u, max 12u). Mengen start op '+fmtTime(mengenStep.start)+'.';
+  }
+  const koelStep2=steps.find(s=>s.id===11);
+  const ovenStep=steps.find(s=>s.id===12);
+  if(koelStep2 && ovenStep){
+    const koelH=((ovenStep.start-koelStep2.start)/3600000).toFixed(1);
+    koelStep2.note_extra='Koelkast rijst '+koelH+'u (min 1u, max 24u). Oven start direct daarna op '+fmtTime(ovenStep.start)+'.';
+  }
+
+  if(conflicts.length===0){
+    const koelkastStep=steps.find(s=>s.id===11);
+    const koelDurH=ovenStep?((ovenStep.start-koelkastStep.start)/3600000).toFixed(1):((koelkastStep.end-koelkastStep.start)/3600000).toFixed(1);
+    const starterDurH2=mengenStep?((mengenStep.start-starterStep.start)/3600000).toFixed(1):'?';
+    document.getElementById('statusCard').innerHTML=`
+      <div class="status-header">
+        <h1 class="status-title">Plan gevonden! 🎉</h1>
+        <span class="badge badge-ok">Geen conflicten</span>
+      </div>
+      <p class="status-desc">
+        <strong>Start:</strong> Starter uit koelkast op ${fmtDT(starterStep.start)} (${starterDurH2}u buiten koelkast)<br>
+        <strong>Klaar:</strong> ${fmtDT(done)} — ruim voor de deadline van ${fmtDT(deadline)}<br>
+        <strong>Koelkast rijzen:</strong> ${koelDurH} uur
+      </p>`;
+  } else {
+    const conflictNames=conflicts.map(s=>`<strong>${s.name}</strong>`).join(', ');
+    document.getElementById('statusCard').innerHTML=`
+      <div class="status-header">
+        <h1 class="status-title">Plan met ${conflicts.length} conflict${conflicts.length>1?'en':''}</h1>
+        <span class="badge badge-err">${conflicts.length} conflict${conflicts.length>1?'en':''}</span>
+      </div>
+      <p class="status-desc">Conflicten bij: ${conflictNames}.<br>Pas de deadline aan of verwijder bezette periodes voor een conflictvrij schema.</p>`;
+  }
+
+  document.getElementById('stepsCard').style.display='block';
+  const list=document.getElementById('stepList'); list.innerHTML='';
+  const now=new Date();
+  steps.forEach((step,i)=>{
+    const item=document.createElement('div');
+    item.className='step-item';
+    let cls='s-future';
+    if(step.end<now) cls='s-done';
+    else if(step.start<=now && step.end>=now) cls='s-active';
+    else if(step.conflict) cls='s-conflict';
+    const timeTxt=step.minDur===0?`🎉 ${fmtDT(step.start)}`:`${fmtDT(step.start)} → ${fmtDT(step.end)}`;
+    const durTxt=step.minDur===0?'':step.minDur===step.maxDur?`${step.minDur} min`:`${step.minDur}–${step.maxDur} min`;
+    const durH=step.minDur>=60?` (${((step.end-step.start)/3600000).toFixed(1)}u gepland)`:'';
+    item.innerHTML=`
+      <div class="step-num ${cls}">${cls==='s-done'?'✓':i+1}</div>
+      <div class="step-body">
+        <div class="step-name">${step.emoji} ${step.name}</div>
+        <div class="step-time"><strong>${timeTxt}</strong></div>
+        <div class="step-note">${durTxt}${durH}${step.id===2&&step.scheduledDur?' (gepland: '+step.scheduledDur+' min)':''} · ${step.note}</div>
+        ${step.sfBlock ? renderSFSubsteps(step) : ''}
+        ${step.note_extra?`<div class="step-flex-note">💡 ${step.note_extra}</div>`:''}
+        ${step.conflict?`<div class="step-conflict-msg">⚠️ Conflict met een bezette of slaapperiode!</div>`:''}
+      </div>`;
+    list.appendChild(item);
+  });
+
+  renderTimeline(steps);
+}
+
+function renderTimeline(steps){
+  document.getElementById('timelineCard').style.display='block';
+  const bar=document.getElementById('tlBar'); bar.innerHTML='';
+  const axis=document.getElementById('tlAxis'); axis.innerHTML='';
+  const tStart=steps[0].start;
+  const tEnd=steps[steps.length-1].end;
+  const totalMs=Math.max(tEnd-tStart,7200000);
+  const pct=ms=>(ms/totalMs)*100;
+
+  for(const p of periods){
+    const s=new Date(Math.max(p.from.getTime(),tStart.getTime()));
+    const e=new Date(Math.min(p.to.getTime(),tEnd.getTime()));
+    if(s>=e) continue;
+    const seg=document.createElement('div');
+    seg.className='tl-seg '+(p.type==='sleep'?'tl-seg-sleep':'tl-seg-busy');
+    seg.style.cssText=`left:${pct(s-tStart)}%;width:${pct(e-s)}%;`;
+    seg.title=`${p.type==='sleep'?'Slaap':'Bezet'}: ${fmtTime(p.from)}–${fmtTime(p.to)}`;
+    bar.appendChild(seg);
+  }
+
+  steps.forEach(step=>{
+    if(step.minDur===0) return;
+    const l=pct(step.start-tStart);
+    const w=Math.max(pct(step.end-step.start),0.5);
+    const seg=document.createElement('div');
+    seg.className='tl-seg';
+    seg.style.cssText=`left:${l}%;width:${w}%;background:${step.color};color:white;`;
+    if(w>3) seg.textContent=step.emoji;
+    seg.title=`${step.name}: ${fmtTime(step.start)}–${fmtTime(step.end)}`;
+    bar.appendChild(seg);
+  });
+
+  const nLabels=Math.ceil(totalMs/3600000/2)+1;
+  for(let i=0;i<nLabels;i++){
+    const t=addMin(tStart,i*120);
+    if(t>tEnd) break;
+    const lbl=document.createElement('div');
+    lbl.className='tl-axis-lbl';
+    lbl.style.cssText=`position:absolute;left:${pct(t-tStart)}%;transform:translateX(-50%)`;
+    lbl.textContent=t.toLocaleString('nl-NL',{weekday:'short',hour:'2-digit',minute:'2-digit'});
+    axis.appendChild(lbl);
+  }
+}
+
+document.getElementById('addBusyBtn').addEventListener('click',()=>{
+  const f=document.getElementById('busyFrom').value;
+  const t=document.getElementById('busyTo').value;
+  if(!f||!t){alert('Vul beide tijden in.');return;}
+  addPeriod('busy',new Date(f),new Date(t));
+  document.getElementById('busyFrom').value='';
+  document.getElementById('busyTo').value='';
+});
+
+document.getElementById('addSleepBtn').addEventListener('click',()=>{
+  const f=document.getElementById('sleepFrom').value;
+  const t=document.getElementById('sleepTo').value;
+  if(!f||!t){alert('Vul beide tijden in.');return;}
+  addPeriod('sleep',new Date(f),new Date(t));
+  document.getElementById('sleepFrom').value='';
+  document.getElementById('sleepTo').value='';
+});
+
+document.getElementById('calcBtn').addEventListener('click',findAndRender);
+
+document.getElementById('resetBtn').addEventListener('click',()=>{
+  periods=[]; schedule=null;
+  renderPeriods();
+  document.getElementById('stepsCard').style.display='none';
+  document.getElementById('timelineCard').style.display='none';
+  document.getElementById('statusCard').innerHTML=`
+    <div class="status-header">
+      <h1 class="status-title">Plan je zuurdesembrood</h1>
+      <span class="badge badge-neutral">Wachten op invoer</span>
+    </div>
+    <p class="status-desc">Stel een deadline in, voeg drukke periodes en slaaptijden toe. De planner zoekt automatisch de beste starttijd binnen alle tijdsvensters.</p>`;
+  document.getElementById('deadline').value=defaultDeadline;
+});
+
+const now2=new Date();
+now2.setDate(now2.getDate()+2); now2.setHours(18,0,0,0);
+const defaultDeadline=fmtDTLocal(now2);
+document.getElementById('deadline').value=defaultDeadline;
+
+const sleepStart=new Date(); sleepStart.setHours(23,0,0,0);
+const sleepEnd=new Date(); sleepEnd.setDate(sleepEnd.getDate()+1); sleepEnd.setHours(7,0,0,0);
+document.getElementById('sleepFrom').value=fmtDTLocal(sleepStart);
+document.getElementById('sleepTo').value=fmtDTLocal(sleepEnd);
+</script>
+</body>
+</html>
